@@ -4,8 +4,8 @@ import helpers.Helpers
 
 object Day2 {
   def main(args: Array[String]): Unit = {
-    //    val input = Helpers.readFile("day2/test.txt")
-    val input = Helpers.readFile("day2/day2.txt")
+//    val input = Helpers.readFile("day2/test.txt")
+        val input = Helpers.readFile("day2/day2.txt")
 
     val restrictions: Map[String, Int] = Map(
       "red" -> 12,
@@ -13,9 +13,9 @@ object Day2 {
       "blue" -> 14
     )
 
-    //    input.foreach(parseLine)
+    val parsedGames = input.map(parseLine)
 
-    val validGames = input.map(parseLine).filter(game => {
+    val validGames = parsedGames.filter(game => {
       val (id, phases) = game
       phases.forall(phase => {
         phase.forall { case (phaseColor, phaseAmount) => {
@@ -28,6 +28,19 @@ object Day2 {
     val part1 = validGames.map(_._1).sum
 
     println(s"Part 1: $part1")
+
+    val part2 = parsedGames.map { case (id, phases) => {
+      val maxPerColor = phases.flatten
+        .groupBy(_._1)
+        .map(colorGroup => colorGroup._1 -> colorGroup._2.map(_._2).max)
+      val mult = maxPerColor.values.reduce((a, b) => a * b)
+      (id, mult)
+    }
+    }
+      .map(_._2).sum
+
+
+    println(s"Part 2: $part2")
 
   }
 
