@@ -5,8 +5,9 @@ import helpers.Helpers
 object Day3 {
   def main(args: Array[String]): Unit = {
 
-//    val input = Helpers.readFile("day3/test.txt")
-    val input = Helpers.readFile("day3/day3.txt")
+    //    val input = Helpers.readFile("day3/test.txt")
+//    val input = Helpers.readFile("day3/test2.txt")
+        val input = Helpers.readFile("day3/day3.txt")
 
     val parsed = input.zipWithIndex.map { case (line, index) => {
       parse(line, index)
@@ -16,7 +17,7 @@ object Day3 {
     val builtData = buildMap(parsed)
 
     val possibleNeighbors = builtData._1
-      .flatMap(_.getNeighbors())
+      .flatMap(_._1.getNeighbors())
       .map(symbolNeighbor => builtData._2.get(symbolNeighbor))
     val thing = possibleNeighbors
       .filter(_.isDefined)
@@ -26,9 +27,12 @@ object Day3 {
       .map(id => builtData._3.get(id).get)
       .toSeq.sorted
 
-   val part1 = numbersNextToSymbols.sum
+    val part1 = numbersNextToSymbols.sum
 
     println(s"Part 1: $part1")
+
+    val part2 = findGears(builtData)
+    println(s"Part 2: $part2")
 
   }
 
@@ -37,7 +41,7 @@ object Day3 {
     val numberFinder = """(\d+)""".r
     val expectedNumbers = numberFinder.findAllIn(line).size
 
-    val x = line.toCharArray.zipWithIndex.toSeq.foldLeft((("", Set[Coord]()), Row(Set(), Set())))((acc, nextChar) => {
+    val x = line.toCharArray.zipWithIndex.toSeq.foldLeft((("", Set[Coord]()), Row(Set(), Seq())))((acc, nextChar) => {
       if (nextChar._1 == '.') {
         if (acc._1._1.isEmpty) {
           acc //no new digit
@@ -61,13 +65,13 @@ object Day3 {
           (("", Set[Coord]()), updatedRow)
         }
         val symbolCoord = Coord(nextChar._2, row)
-        val updatedRow = Row(updatedRow1._2.numbers, updatedRow1._2.symbols + symbolCoord)
+        val updatedRow = Row(updatedRow1._2.numbers, updatedRow1._2.symbols :+ (symbolCoord, nextChar._1))
         (("", Set[Coord]()), updatedRow)
       }
     })
 
 
-    val finalRow = if(!x._1._1.isEmpty){
+    val finalRow = if (!x._1._1.isEmpty) {
       //the line ended with a number
       val fullNumber = x._1._1
       val updatedRow = Row(x._2.numbers + (fullNumber -> x._1._2), x._2.symbols)
@@ -76,7 +80,7 @@ object Day3 {
       x._2
     }
 
-    if(finalRow.numbers.size != expectedNumbers){
+    if (finalRow.numbers.size != expectedNumbers) {
       ???
     }
 
@@ -100,6 +104,23 @@ object Day3 {
     val coordToNumber = allNumbersMap.flatMap(kv => kv._2.map(c => c -> kv._1))
     (allSymbols, coordToId, idToNumber)
   }
+
+
+  def findGears(builtData: (Seq[(Coord, Char)], Map[Coord, Int], Map[Int, Int])): Int = {
+    val gears = builtData._1
+      .filter(x => x._2 == '*')
+    val gearNeighborsAll = gears
+      .map(gear => gear._1
+        .getNeighbors()
+        .map(gearNeighbor => builtData._2.get(gearNeighbor)).filter(_.isDefined).map(_.get).distinct
+      )
+    val filteredGearNeighbors = gearNeighborsAll
+      .filter(gearSet => gearSet.size == 2)
+    val calc = filteredGearNeighbors
+      .map(gearSet => gearSet.map(id => builtData._3(id)).reduce((a, b) => a * b))
+      .sum
+    calc
+  }
 }
 
 case class Coord(x: Int, y: Int) {
@@ -119,4 +140,4 @@ case class Coord(x: Int, y: Int) {
 
 
 //numbers can't be a Map.  There might be duplicated numbers in the same row.
-case class Row(numbers: Set[(String, Set[Coord])], symbols: Set[Coord]) {}
+case class Row(numbers: Set[(String, Set[Coord])], symbols: Seq[(Coord, Char)]) {}
