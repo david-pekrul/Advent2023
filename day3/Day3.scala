@@ -6,8 +6,8 @@ object Day3 {
   def main(args: Array[String]): Unit = {
 
     //    val input = Helpers.readFile("day3/test.txt")
-//    val input = Helpers.readFile("day3/test2.txt")
-        val input = Helpers.readFile("day3/day3.txt")
+    //    val input = Helpers.readFile("day3/test2.txt")
+    val input = Helpers.readFile("day3/day3.txt")
 
     val parsed = input.zipWithIndex.map { case (line, index) => {
       parse(line, index)
