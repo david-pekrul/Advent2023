@@ -32,8 +32,6 @@ object Day4 {
       updatedMap
     })
 
-    val sortedValues = finalValues.toSeq.sortBy(a => a._1)
-
     finalValues.values.sum
   }
 
