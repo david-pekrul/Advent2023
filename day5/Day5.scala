@@ -27,4 +27,20 @@ object Day5 {
   def getNextLines(itr: Iterator[String]): Seq[String] = {
     itr.takeWhile(s => !s.trim.isEmpty).toSeq.filter(!_.contains(":"))
   }
+
+  case class LookupTable(entries: Seq[LookupEntry]){
+
+  }
+
+  case class LookupEntry(destinationRangeStart: Long, sourceRangeStart: Long, rangeLength: Long){
+
+  }
+
+  object LookupEntry {
+    val regex = """^(\d+) (\d+) (\d+)""".r
+    def parse(input: String): LookupEntry = {
+      val regex(dest,src,r) = input
+      LookupEntry(dest.toLong,src.toLong,r.toLong)
+    }
+  }
 }
