@@ -13,8 +13,8 @@ object Day5 {
     val part1 = translatedSeeds.map(_._2).min
     println(s"Part 1: $part1")
 
-    val part2SeedRanges = createSeedRanges2(seeds)
-    val part2Processed = part2SeedRanges.map(x => lookup.translate3(x))
+    val part2SeedRanges = createSeedRanges(seeds)
+    val part2Processed = part2SeedRanges.map(x => lookup.translateRange(x))
     val part2 = part2Processed.flatten.map(_.start).min
     println(s"Part 2: $part2")
   }
@@ -38,12 +38,8 @@ object Day5 {
     (seedValues, Lookup(rawStrings.map(rawStringSeq => LookupTable(rawStringSeq.map(LookupEntry.parse)))))
   }
 
-  def createSeedRanges(seeds: Seq[Long]): Seq[Range] = {
-    seeds.grouped(2).map(g => Range(g.head, g.last)).toSeq
-  }
-
-  def createSeedRanges2(seeds: Seq[Long]): Seq[Range2] = {
-    createSeedRanges(seeds).map(old => Range2(old.start, old.end))
+  def createSeedRanges(seeds: Seq[Long]): Seq[Range2] = {
+    seeds.grouped(2).map(pair => Range2(pair.head, pair.head + pair.last)).toSeq
   }
 
   def getNextLines(itr: Iterator[String]): Seq[String] = {
@@ -57,9 +53,9 @@ object Day5 {
       })
     }
 
-    def translate3(input: Range2): Seq[Range2] = {
+    def translateRange(input: Range2): Seq[Range2] = {
       tables.foldLeft(Seq(input))((inputRangesFromPreviousTable, nextTable) => {
-        val translationsFromTable = inputRangesFromPreviousTable.flatMap(r => nextTable.translate3(r))
+        val translationsFromTable = inputRangesFromPreviousTable.flatMap(r => nextTable.translateRange(r))
         translationsFromTable
       })
     }
@@ -78,26 +74,25 @@ object Day5 {
       }
     }
 
-    def translate3(input: Range2): Seq[Range2] = {
+    def translateRange(input: Range2): Seq[Range2] = {
 
       //for each untranslated range, fold left through all of the lookup entries
-
       val initialState = (Seq(input), Seq[Range2]()) //untranslated : translated
-      val processed = entriesSortedbySourceStart.foldLeft(initialState)((acc, currentLookupEntry) => {
-        val untranslatedRanges = acc._1
+      val (unmodifiedRanges,modifiedRanges) = entriesSortedbySourceStart.foldLeft(initialState)((acc, currentLookupEntry) => {
+        val currentUntranslated = acc._1
         val alreadyTranslatedRanges = acc._2
-        if (acc._1.isEmpty) {
+        if (currentUntranslated.isEmpty) {
           acc //no more to translate
         } else {
           //take each untranslated and attempt to translate them through the currentLookupEntry
-          val translationsThroughLookupEntry = untranslatedRanges.map(r => currentLookupEntry.translate2(r))
+          val translationsThroughLookupEntry = currentUntranslated.map(r => currentLookupEntry.translateRange(r))
           val remainingUntranslated = translationsThroughLookupEntry.map(_._1).flatten
           val newTranslations = translationsThroughLookupEntry.map(_._2).flatten
           (remainingUntranslated, newTranslations ++ alreadyTranslatedRanges)
         }
       })
       //take all the ranges that didn't get translated and append the ranges that did get translated
-      processed._1 ++ processed._2
+      unmodifiedRanges ++ modifiedRanges
     }
 
 
@@ -135,22 +130,18 @@ object Day5 {
      * 4: this entry overlaps the end part of the input, causing an output of 2 ranges
      * 5: this entry starts after the input ends, having the input unchanged
      * 6: this entry fully contains the input, having the output of 1 fully translated input
-     *
-     *
-     * @param input
-     * @return
      */
     //Return: (Remaining source Range(s), Translated Ranges)
-    def translate2(input: Range2): (Seq[Range2], Seq[Range2]) = {
+    def translateRange(input: Range2): (Seq[Range2], Seq[Range2]) = {
 
       //case 5
       if (input.end < this.sourceStart) {
-        return (Seq(input), Seq())
+        return (Seq(input), Seq()) //this was untranslated, and no translation happened
       }
 
       //case 1
       if (this.sourceEnd < input.start) {
-        return (Seq(input), Seq())
+        return (Seq(input), Seq()) //this was untranslated, and no translation happened
       }
 
       //case 6
@@ -192,7 +183,7 @@ object Day5 {
         return (Seq(left), Seq(rightShifted)) //left was not modified, but the right was
       }
 
-
+      // Uh...... whoops!
       println(s"This: $this\r\nRange2: $input")
       ???
     }
@@ -208,12 +199,6 @@ object Day5 {
 
   }
 
-  case class Range(start: Long, size: Long) {
-    lazy val end = start + size - 1
-  }
-
   //Inclusive ends
-  case class Range2(start: Long, end: Long) {
-
-  }
+  case class Range2(start: Long, end: Long) {}
 }
