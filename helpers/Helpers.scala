@@ -31,4 +31,29 @@ object Helpers {
 
     xs
   }
+
+  def gcf(a: Long, b: Long): Long = {
+    if(b == 0){
+      a
+    } else {
+      gcf(b,a%b)
+    }
+  }
+
+  def lcm(a: Long, b: Long): Long = {
+    a * (b / gcf(a,b))
+  }
+
+  def lcm(input: Seq[Long]): Long = {
+    if(input.isEmpty){
+      ???
+    }
+    if(input.size == 1){
+      input.head
+    } else {
+      input.tail.foldLeft(input.head)((acc,next) => {
+        lcm(acc,next)
+      })
+    }
+  }
 }
