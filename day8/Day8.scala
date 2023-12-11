@@ -5,7 +5,7 @@ import helpers.Helpers
 object Day8 {
   def main(args: Array[String]): Unit = {
     //    val input = Helpers.readFile("day8/test.txt")
-    //    val input = Helpers.readFile("day8/test2.txt")
+    //    val input = Helpers.readFile("day8/test1_1.txt")
     //    val input = Helpers.readFile("day8/test3.txt")
     val input = Helpers.readFile("day8/day8.txt")
 
