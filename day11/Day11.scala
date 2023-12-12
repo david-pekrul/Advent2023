@@ -4,37 +4,49 @@ import helpers.Helpers
 
 object Day11 {
   def main(args: Array[String]): Unit = {
-    val input = Helpers.readFile("day11/test.txt")
+    //    val input = Helpers.readFile("day11/test.txt")
+    val input = Helpers.readFile("day11/day11.txt")
 
     val galaxies = parse(input)
     println(galaxies)
 
+    val expansion = findExpandedRowsAndColumns(galaxies)
+
     val indexGalaxies = galaxies.toSeq.zipWithIndex
 
-    val galaxyPairs = indexGalaxies.foldLeft(Map[Coord,Seq[Coord]]())((acc,nextGalaxy) => {
+    val galaxyPairs = indexGalaxies.foldLeft(Map[Coord, Seq[Coord]]())((acc, nextGalaxy) => {
       val galaxiesToPair = indexGalaxies.takeWhile(g => g != nextGalaxy).map(_._1)
       acc + (nextGalaxy._1 -> galaxiesToPair)
     })
 
-    val y = galaxyPairs.toSeq.flatMap(kv => kv._2.map(x => (kv._1,x)))
+    val y = galaxyPairs.toSeq.flatMap(kv => kv._2.map(x => (kv._1, x)))
 
+    val part1 = y.map(g1g2 => g1g2._1.spaceBetween(g1g2._2, expansion)).sum
+    println(s"Part 1: $part1")
   }
 
-  def findExpandedRowsAndColumns(galaxies: Set[Coord]): (Set[Int],Set[Int]) = {
+  def findExpandedRowsAndColumns(galaxies: Set[Coord]): Expansion = {
     val rowsWithGalaxies = galaxies.map(g => g.y)
     val columnsWithGalaxies = galaxies.map(g => g.x)
 
+    val maxCol = columnsWithGalaxies.max
+    val maxRow = rowsWithGalaxies.max
 
-    ???
+    val expandedCols = (0 until maxCol).toSet.removedAll(columnsWithGalaxies)
+    val expandedRows = (0 until maxRow).toSet.removedAll(rowsWithGalaxies)
+
+    Expansion(expandedRows, expandedCols)
   }
 
   def parse(input: Seq[String]): Set[Coord] = {
     input.zipWithIndex.flatMap(rowWithIndex => {
-      rowWithIndex._1.toCharArray.toSeq.zipWithIndex.filter(_._1=='#').map(charWithColIndex => {
-        Coord(charWithColIndex._2,rowWithIndex._2)
+      rowWithIndex._1.toCharArray.toSeq.zipWithIndex.filter(_._1 == '#').map(charWithColIndex => {
+        Coord(charWithColIndex._2, rowWithIndex._2)
       })
     }).toSet
   }
+
+  case class Expansion(rows: Set[Int], cols: Set[Int]) {}
 
   case class Coord(x: Int, y: Int) {
 
@@ -50,9 +62,17 @@ object Day11 {
       x < 0 || y < 0 || x > maxX || y > maxY
     }
 
-    def spaceBetween(other: Coord): Int = {
+    def spaceBetween(other: Coord, exp: Expansion): Int = {
 
-      -1
+      val leftX = Math.min(this.x, other.x)
+      val rightX = Math.max(this.x, other.x)
+      val topY = Math.min(this.y, other.y)
+      val bottomY = Math.max(this.y, other.y)
+
+      val deltaX = (rightX - leftX) + exp.cols.filter(e => leftX < e && e < rightX).size
+      val deltaY = (bottomY - topY) + exp.rows.filter(e => topY < e && e < bottomY).size
+
+      deltaX + deltaY
     }
   }
 }
