@@ -12,9 +12,9 @@ object Day10 {
     //    val input = Helpers.readFile("day10/test2_1.txt")
     //    val input = Helpers.readFile("day10/test3.txt")
     //    val input = Helpers.readFile("day10/test4.txt")
-    val input = Helpers.readFile("day10/test5.txt")
+//    val input = Helpers.readFile("day10/test5.txt")
     //    val input = Helpers.readFile("day10/test6.txt")
-    //    val input = Helpers.readFile("day10/day10.txt")
+            val input = Helpers.readFile("day10/day10.txt")
     val (coordToPipeMap, xDimension, yDimension) = parse(input)
 
     //    printMap(coordToPipeMap, xDimension, yDimension)
@@ -35,6 +35,10 @@ object Day10 {
 
     //    val part2 = countCapturedCoords(culledInput, coordsInLoop, xDimension, yDimension)
     //    println(s"Part 2: $part2")
+
+    val x = paintNodes(coordToPipeMap, fullChain.toSet, fullChain, xDimension, yDimension)
+    val part2 = x.size
+    println(s"Part 2: $part2")
   }
 
   def parse(input: Seq[String]): (Map[Coord, Pipe], Int, Int) = {
@@ -52,30 +56,30 @@ object Day10 {
     (map, x, y)
   }
 
-  def burnBothEnds(culledMap: Map[Coord, Pipe]) = {
+  /*  def burnBothEnds(culledMap: Map[Coord, Pipe]) = {
 
-    val startNode = culledMap.values.find(_.shape == 'S').get
+      val startNode = culledMap.values.find(_.shape == 'S').get
 
 
-    val startingNeighbors = startNode.getConnectionCoords().map(neighborCoord => culledMap.get(neighborCoord)).filter(_.isDefined).map(_.get).toSeq
-    val startCondition = (startingNeighbors(0), startingNeighbors(1), Set(startNode.coord, startingNeighbors(0).coord, startingNeighbors(1).coord), 1) //"left path","right path","seen nodes"
+      val startingNeighbors = startNode.getConnectionCoords().map(neighborCoord => culledMap.get(neighborCoord)).filter(_.isDefined).map(_.get).toSeq
+      val startCondition = (startingNeighbors(0), startingNeighbors(1), Set(startNode.coord, startingNeighbors(0).coord, startingNeighbors(1).coord), 1) //"left path","right path","seen nodes"
 
-    val finalState = Iterator.iterate(startCondition)(currentState => {
-      val nextLeftCoord = currentState._1.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
-      val nextRightCoord = currentState._2.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
+      val finalState = Iterator.iterate(startCondition)(currentState => {
+        val nextLeftCoord = currentState._1.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
+        val nextRightCoord = currentState._2.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
 
-      (culledMap(nextLeftCoord), culledMap(nextRightCoord), currentState._3 ++ Set(nextLeftCoord, nextRightCoord), currentState._4 + 1)
-    }).find(state => {
-      state._1 == state._2
-    }).get
+        (culledMap(nextLeftCoord), culledMap(nextRightCoord), currentState._3 ++ Set(nextLeftCoord, nextRightCoord), currentState._4 + 1)
+      }).find(state => {
+        state._1 == state._2
+      }).get
 
-    //    println(finalState._1, finalState._4)
-    finalState
-    val halfWayPipe = finalState._1
-    val coordsInLoop = finalState._3 + halfWayPipe.coord
-    val lengthToHalf = finalState._4
-    (halfWayPipe, coordsInLoop, lengthToHalf)
-  }
+      //    println(finalState._1, finalState._4)
+      finalState
+      val halfWayPipe = finalState._1
+      val coordsInLoop = finalState._3 + halfWayPipe.coord
+      val lengthToHalf = finalState._4
+      (halfWayPipe, coordsInLoop, lengthToHalf)
+    }*/
 
   def burnBothEnds2(culledMap: Map[Coord, Pipe]) = {
 
@@ -88,7 +92,7 @@ object Day10 {
     //create sequence of (Coord, Vector) so we know for each loop point, which way we are going
     val finalState = Iterator.iterate(startCondition)(currentState => {
       val nextLeftCoord = currentState._1.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
-      val nextRightCoord = currentState._2.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
+      val nextRightCoord = currentState._2.getConnectionCoords().filter(coord => !currentState._4.contains(coord)).head
       val leftChain = currentState._3 :+ nextLeftCoord
       val rightChain = currentState._4 :+ nextRightCoord
       (culledMap(nextLeftCoord), culledMap(nextRightCoord), leftChain, rightChain, currentState._5 + 1)
@@ -133,13 +137,46 @@ object Day10 {
 
 
   def paintNodes(input: Map[Coord, Pipe], coordsInLoop: Set[Coord], fullPath: Seq[Coord], maxX: Int, maxY: Int) = {
-    val filteredMap = input.filter(x => coordsInLoop.contains(x._1))
 
     val coordsAndVectors = fullPath.sliding(2, 1).map { case Seq(point, next) => {
       point -> Vector(next.x - point.x, next.y - point.y)
     }
     }.toSeq
 
+    val coordsNotOnLoop = input.filter(x => !coordsInLoop.contains(x._1)).map(kv => kv._1 -> 0).toMap
+
+
+    val painted = coordsAndVectors.sliding(2, 1).foldLeft(coordsNotOnLoop)((acc, currentAndNextVector) => {
+      val current = currentAndNextVector(0)
+      val next = currentAndNextVector(1)
+
+      val vectorToApply = current._2.getInOutDirection()
+      val affectedCoords = Iterator.iterate(vectorToApply.apply(current._1))(c => {
+        vectorToApply(c)
+      }).takeWhile(c => coordsNotOnLoop.contains(c)).toSeq.filter(x => !coordsInLoop.contains(x))
+
+      val allAffected = if (next._2 != current._2) {
+        //there is a turn, need to add in the pre-turn applying this vector to the next coord
+        affectedCoords ++ Iterator.iterate(vectorToApply.apply(next._1))(c => {
+          vectorToApply(c)
+        }).takeWhile(c => coordsNotOnLoop.contains(c)).toSeq.filter(x => !coordsInLoop.contains(x))
+      } else {
+        affectedCoords
+      }
+
+      val updatedAcc = allAffected.foldLeft(acc)((acc2, affectedCoord) => {
+        acc2.updatedWith(affectedCoord) {
+          case Some(currentCount) => Some(currentCount + 1)
+          case None => Some(1)
+        }
+      })
+
+//      printMap2(input, updatedAcc, maxX, maxY)
+
+      updatedAcc
+    })
+    val enclosedCoords = painted.filter(kv => kv._2 > 0 && kv._2 % 2 == 0)
+    enclosedCoords
   }
 
   @tailrec
@@ -219,6 +256,17 @@ object Day10 {
     (0 until yMax).foreach(y => {
       (0 until xMax).foreach(x => {
         print(map.get(Coord(x, y)).map(_.shape).getOrElse('.'))
+      })
+      println
+    })
+    println("---------------------------")
+  }
+
+  def printMap2(map: Map[Coord, Pipe], spots: Map[Coord, Int], xMax: Int, yMax: Int): Unit = {
+    (0 until yMax).foreach(y => {
+      (0 until xMax).foreach(x => {
+        print(spots.get(Coord(x, y)).map(_.toString).getOrElse(map(Coord(x, y)).shape))
+        //        print(map.get(Coord(x, y)).map(_.shape).getOrElse(spots.get(Coord(x,y)).getOrElse('?')))
       })
       println
     })
