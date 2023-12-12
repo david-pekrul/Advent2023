@@ -12,9 +12,9 @@ object Day10 {
     //    val input = Helpers.readFile("day10/test2_1.txt")
     //    val input = Helpers.readFile("day10/test3.txt")
     //    val input = Helpers.readFile("day10/test4.txt")
-//    val input = Helpers.readFile("day10/test5.txt")
+    //    val input = Helpers.readFile("day10/test5.txt")
     //    val input = Helpers.readFile("day10/test6.txt")
-            val input = Helpers.readFile("day10/day10.txt")
+    val input = Helpers.readFile("day10/day10.txt")
     val (coordToPipeMap, xDimension, yDimension) = parse(input)
 
     //    printMap(coordToPipeMap, xDimension, yDimension)
@@ -33,8 +33,6 @@ object Day10 {
       ??? //sanity check the start node is the first and last
     }
 
-    //    val part2 = countCapturedCoords(culledInput, coordsInLoop, xDimension, yDimension)
-    //    println(s"Part 2: $part2")
 
     val x = paintNodes(coordToPipeMap, fullChain.toSet, fullChain, xDimension, yDimension)
     val part2 = x.size
@@ -55,31 +53,6 @@ object Day10 {
     val y = input.size
     (map, x, y)
   }
-
-  /*  def burnBothEnds(culledMap: Map[Coord, Pipe]) = {
-
-      val startNode = culledMap.values.find(_.shape == 'S').get
-
-
-      val startingNeighbors = startNode.getConnectionCoords().map(neighborCoord => culledMap.get(neighborCoord)).filter(_.isDefined).map(_.get).toSeq
-      val startCondition = (startingNeighbors(0), startingNeighbors(1), Set(startNode.coord, startingNeighbors(0).coord, startingNeighbors(1).coord), 1) //"left path","right path","seen nodes"
-
-      val finalState = Iterator.iterate(startCondition)(currentState => {
-        val nextLeftCoord = currentState._1.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
-        val nextRightCoord = currentState._2.getConnectionCoords().filter(coord => !currentState._3.contains(coord)).head
-
-        (culledMap(nextLeftCoord), culledMap(nextRightCoord), currentState._3 ++ Set(nextLeftCoord, nextRightCoord), currentState._4 + 1)
-      }).find(state => {
-        state._1 == state._2
-      }).get
-
-      //    println(finalState._1, finalState._4)
-      finalState
-      val halfWayPipe = finalState._1
-      val coordsInLoop = finalState._3 + halfWayPipe.coord
-      val lengthToHalf = finalState._4
-      (halfWayPipe, coordsInLoop, lengthToHalf)
-    }*/
 
   def burnBothEnds2(culledMap: Map[Coord, Pipe]) = {
 
@@ -103,38 +76,6 @@ object Day10 {
     val (halfWayPipe, halfWayPipe2, leftChain, rightChain, lengthToHalf) = finalState
     (halfWayPipe, leftChain, rightChain, lengthToHalf)
   }
-
-  def countCapturedCoords(input: Map[Coord, Pipe], coordsInLoop: Set[Coord], maxX: Int, maxY: Int): Int = {
-
-    val filteredMap = input.filter(x => coordsInLoop.contains(x._1))
-
-    def _inLoop(coord: Coord): Boolean = {
-      //a point in the loop would have to have an odd number of crossings to get out
-
-      //starting == (coord, pipes from loop crossed getting out)
-      val (offTheEdge, runToEdge) = Iterator.iterate((coord, Set[Pipe]()))(currentState => {
-        val nextCoord = currentState._1.up()
-        val nextPipeOpt = filteredMap.get(nextCoord)
-        val updatedSet = nextPipeOpt match {
-          case Some(p) => currentState._2 + p
-          case None => currentState._2
-        }
-        (nextCoord, updatedSet)
-      })
-        .find(n => n._1.offTheMap(maxX, maxY)).get
-
-      val upSize = runToEdge.filter(_.shape != '|').size
-      upSize % 2 == 1
-    }
-
-    (0 until maxX).map(x => {
-      (0 until maxY).filter(y => {
-        val c = Coord(x, y)
-        !coordsInLoop.contains(c) && _inLoop(Coord(x, y))
-      }).size
-    }).sum
-  }
-
 
   def paintNodes(input: Map[Coord, Pipe], coordsInLoop: Set[Coord], fullPath: Seq[Coord], maxX: Int, maxY: Int) = {
 
@@ -171,7 +112,7 @@ object Day10 {
         }
       })
 
-//      printMap2(input, updatedAcc, maxX, maxY)
+      //      printMap2(input, updatedAcc, maxX, maxY)
 
       updatedAcc
     })
@@ -225,9 +166,9 @@ object Day10 {
 
     def right() = Coord(x + 1, y)
 
-    def offTheMap(maxX: Int, maxY: Int): Boolean = {
-      x < 0 || y < 0 || x > maxX || y > maxY
-    }
+    //    def offTheMap(maxX: Int, maxY: Int): Boolean = {
+    //      x < 0 || y < 0 || x > maxX || y > maxY
+    //    }
   }
 
   object Vector extends Enumeration {
