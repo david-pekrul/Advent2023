@@ -6,30 +6,23 @@ object Day11 {
   def main(args: Array[String]): Unit = {
 //        val input = Helpers.readFile("day11/test.txt")
     val input = Helpers.readFile("day11/day11.txt")
-
     val galaxies = parse(input)
-    println(galaxies)
 
     val expansion = findExpandedRowsAndColumns(galaxies)
-
     val indexGalaxies = galaxies.toSeq.zipWithIndex
 
     val galaxyPairs = indexGalaxies.foldLeft(Map[Coord, Seq[Coord]]())((acc, nextGalaxy) => {
       val galaxiesToPair = indexGalaxies.takeWhile(g => g != nextGalaxy).map(_._1)
       acc + (nextGalaxy._1 -> galaxiesToPair)
-    })
+    }).toSeq.flatMap(kv => kv._2.map(x => (kv._1, x)))
 
-    val y = galaxyPairs.toSeq.flatMap(kv => kv._2.map(x => (kv._1, x)))
-
-    val part1 = y.map(g1g2 => g1g2._1.spaceBetweenLARGE(g1g2._2, expansion)).sum
+    val part1 = galaxyPairs.map(galaxyPair => galaxyPair._1.spaceBetweenLARGE(galaxyPair._2, expansion)).sum
     println(s"Part 1: $part1")
 
     val scaleFactor = Math.pow(10,6).longValue
 
-    val part2 = y.map(g1g2 => g1g2._1.spaceBetweenLARGE(g1g2._2, expansion, scaleFactor)).sum
+    val part2 = galaxyPairs.map(galaxyPair => galaxyPair._1.spaceBetweenLARGE(galaxyPair._2, expansion, scaleFactor)).sum
     println(s"Part 2: $part2")
-    //569053155896 too high
-    //82000210 too low
   }
 
   def findExpandedRowsAndColumns(galaxies: Set[Coord]): Expansion = {
@@ -56,19 +49,6 @@ object Day11 {
   case class Expansion(rows: Set[Int], cols: Set[Int]) {}
 
   case class Coord(x: Int, y: Int) {
-
-    def up() = Coord(x, y - 1)
-
-    def down() = Coord(x, y + 1)
-
-    def left() = Coord(x - 1, y)
-
-    def right() = Coord(x + 1, y)
-
-    def offTheMap(maxX: Int, maxY: Int): Boolean = {
-      x < 0 || y < 0 || x > maxX || y > maxY
-    }
-
     def spaceBetweenLARGE(other: Coord, exp: Expansion, scaleFactor: Long = 2 ): Long = {
 
       val leftX = Math.min(this.x, other.x)
