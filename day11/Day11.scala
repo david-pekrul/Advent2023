@@ -4,7 +4,7 @@ import helpers.Helpers
 
 object Day11 {
   def main(args: Array[String]): Unit = {
-    //    val input = Helpers.readFile("day11/test.txt")
+//        val input = Helpers.readFile("day11/test.txt")
     val input = Helpers.readFile("day11/day11.txt")
 
     val galaxies = parse(input)
@@ -21,8 +21,15 @@ object Day11 {
 
     val y = galaxyPairs.toSeq.flatMap(kv => kv._2.map(x => (kv._1, x)))
 
-    val part1 = y.map(g1g2 => g1g2._1.spaceBetween(g1g2._2, expansion)).sum
+    val part1 = y.map(g1g2 => g1g2._1.spaceBetweenLARGE(g1g2._2, expansion)).sum
     println(s"Part 1: $part1")
+
+    val scaleFactor = Math.pow(10,6).longValue
+
+    val part2 = y.map(g1g2 => g1g2._1.spaceBetweenLARGE(g1g2._2, expansion, scaleFactor)).sum
+    println(s"Part 2: $part2")
+    //569053155896 too high
+    //82000210 too low
   }
 
   def findExpandedRowsAndColumns(galaxies: Set[Coord]): Expansion = {
@@ -62,15 +69,18 @@ object Day11 {
       x < 0 || y < 0 || x > maxX || y > maxY
     }
 
-    def spaceBetween(other: Coord, exp: Expansion): Int = {
+    def spaceBetweenLARGE(other: Coord, exp: Expansion, scaleFactor: Long = 2 ): Long = {
 
       val leftX = Math.min(this.x, other.x)
       val rightX = Math.max(this.x, other.x)
       val topY = Math.min(this.y, other.y)
       val bottomY = Math.max(this.y, other.y)
 
-      val deltaX = (rightX - leftX) + exp.cols.filter(e => leftX < e && e < rightX).size
-      val deltaY = (bottomY - topY) + exp.rows.filter(e => topY < e && e < bottomY).size
+      val expansionX = exp.cols.filter(e => leftX < e && e < rightX)
+      val expansionY = exp.rows.filter(e => topY < e && e < bottomY)
+
+      val deltaX = (rightX - leftX - expansionX.size) + (expansionX.size * scaleFactor)
+      val deltaY = (bottomY - topY - expansionY.size) + (expansionY.size * scaleFactor)
 
       deltaX + deltaY
     }
