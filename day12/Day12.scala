@@ -143,8 +143,26 @@ object Day12 {
     }).toSeq
 
 
-    groupsUntilDotOrTooManyPounds
     //still need to check if any of the returned options butt up against another # symbol...
+
+    //todo: need to pair each option up with the remaining (and maybe modified) symbols.
+    // the next symbol might be forced from a ? to a . (aka: removed)
+    // after I do this, do I really need to keep track of the indexes of each char?
+
+    val filteredByNextChar = groupsUntilDotOrTooManyPounds.map(groupedInfo => {
+      val startingIndex = groupedInfo(0)._2
+      val nextCharIsPound = symbols.lift(startingIndex + blockSize).map(c => c == '#').getOrElse(false)
+      if(nextCharIsPound) {
+        None
+      } else {
+        Some((groupedInfo,symbols.drop(startingIndex + blockSize + 1))) //the + 1 is because two blocks can't be next to each other, so this symbol, whether a . or a ? must be dropped
+      }
+    }).filter(_.isDefined).map(_.get)
+
+    filteredByNextChar.foreach(println)
+
+    filteredByNextChar
+
   }
 
   case class SpringRow(row: Seq[Char], brokenCounts: Seq[Int]) {
